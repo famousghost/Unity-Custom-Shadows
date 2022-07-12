@@ -70,6 +70,7 @@ namespace MC.Godrays
             _ShadowMaterial.SetTexture(_ShadowMapTextureId, _LightShaftsTexture);
             _ShadowMaterial.SetMatrix(_LightViewMatrixId, _LightShaftsCamera.worldToCameraMatrix);
             _ShadowMaterial.SetMatrix(_lightProjectionMatrixId, GL.GetGPUProjectionMatrix(_LightShaftsCamera.projectionMatrix, false));
+            _ShadowMaterial.SetFloat(_ShadowMapSizeId, _Resolution);
         }
 
         #endregion Unity Methods
@@ -78,6 +79,7 @@ namespace MC.Godrays
         private static readonly int _ShadowMapTextureId = Shader.PropertyToID("_NewShadowMapTexture");
         private static readonly int _LightViewMatrixId = Shader.PropertyToID("_LightViewMatrix");
         private static readonly int _lightProjectionMatrixId = Shader.PropertyToID("_LightProjectionMatrix");
+        private static readonly int _ShadowMapSizeId = Shader.PropertyToID("_ShadowMapSize");
 
         private CommandBuffer _DepthBufferForLightCamera;
 
