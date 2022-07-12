@@ -549,6 +549,7 @@ GameObject:
   - component: {fileID: 963194228}
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
+  - component: {fileID: 963194229}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -621,6 +622,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &963194229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc65bd4e8ca860e44acd657845dfb3cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _CreateLightCamera: {fileID: 2067093689}
+  _LightShaftsRaymarchingMaterial: {fileID: 2100000, guid: 5a9493950bc6f7e4883dbc311dacc06c, type: 2}
 --- !u!1 &1166311852
 GameObject:
   m_ObjectHideFlags: 0
@@ -779,18 +794,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16f6f2288b645fc4c8822b16853fe92b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _LightShaftsCamera: {fileID: 0}
+  _LightShaftsTexture: {fileID: 511645995}
   _Environment: {fileID: 1166311852}
   _MainCamera: {fileID: 963194227}
   _LightCamera: {fileID: 0}
-  _LightShaftsCamera: {fileID: 0}
   _DirectionalLight: {fileID: 705507994}
   _ShadowMaterial: {fileID: 2100000, guid: eb11222a9c65e7344a0fd9fc54555bbe, type: 2}
   _DepthMaterial: {fileID: 2100000, guid: f335076697b295b4a83847802ef1aa28, type: 2}
-  _FarPlane: 100
-  _Size: 100
+  _FarPlane: 250
+  _Size: 150
   _LightShaftsShader: {fileID: 4800000, guid: 3b56623b7ce456a40a2bc8fe1663adf2, type: 3}
-  _LightShaftsTexture: {fileID: 511645995}
-  _Resolution: 512
+  _Resolution: 2048
 --- !u!4 &2067093690
 Transform:
   m_ObjectHideFlags: 0

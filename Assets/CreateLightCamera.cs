@@ -5,11 +5,17 @@ namespace MC.Godrays
 
     public class CreateLightCamera : MonoBehaviour
     {
+        #region Public Variables
+        public Camera _LightShaftsCamera;
+        public RenderTexture _LightShaftsTexture;
+
+        #endregion Public Variables
+
         #region Inspector Variables
         [SerializeField] private GameObject _Environment;
         [SerializeField] private Camera _MainCamera;
         [SerializeField] private GameObject _LightCamera;
-        [SerializeField] private Camera _LightShaftsCamera;
+
         [SerializeField] private Light _DirectionalLight;
         [SerializeField] private Material _ShadowMaterial;
         [SerializeField] private Material _DepthMaterial;
@@ -19,15 +25,13 @@ namespace MC.Godrays
 
         [SerializeField] private Shader _LightShaftsShader;
 
-        [SerializeField] private RenderTexture _LightShaftsTexture;
-
         [SerializeField] private int _Resolution = 512;
 
         #endregion Inspector Variables
 
         #region Unity Methods
 
-        private void Awake()
+        private void Start()
         {
             _LightShaftsShader = Shader.Find("Unlit/DepthShader");
 

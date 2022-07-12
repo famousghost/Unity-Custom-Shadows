@@ -62,7 +62,7 @@ Shader "Unlit/Shadows"
                     for (int y = -1; y <= 1; ++y)
                     {
                         float closestDepth = tex2D(_NewShadowMapTexture, screenUv + float2(x, y) * 1.0f / _ShadowMapSize);
-                        shadow += currentDepth - bias > closestDepth ? 1.0f : 0.0f;
+                        shadow += currentDepth - bias > closestDepth ? 1.0f : 0.2f;
                     }
                 }
 
