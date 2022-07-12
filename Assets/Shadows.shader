@@ -46,16 +46,26 @@ Shader "Unlit/Shadows"
             }
 
             sampler2D _NewShadowMapTexture;
+            float4 _NewShadowMapTexture_ST;
 
             float4 frag(v2f i) : SV_Target
             {
                 float2 screenUv = i.screenPos.xy / i.screenPos.w * 0.5f + 0.5f;
-                float closestDepth = tex2D(_NewShadowMapTexture, screenUv);
+                float shadow = 0.0f;
+                float bias = 0.005f;
                 float currentDepth = i.screenPos.z;
 
-                float bias = 0.005f;
+                for (int x = -1; x <= 1; ++x)
+                {
+                    for (int y = -1; y <= 1; ++y)
+                    {
+                        float closestDepth = tex2D(_NewShadowMapTexture, screenUv + float2(x, y) * _NewShadowMapTexture_ST.xy);
+                        shadow += currentDepth + bias > closestDepth ? 1.0f : 0.0f;
+                    }
+                }
 
-                float shadow = currentDepth + bias > closestDepth ? 1.0f : 0.2f;
+                shadow /= 9.0f;
+
                 float4 col = tex2D(_MainTex, i.uv) * shadow;
                 return col;
             }
