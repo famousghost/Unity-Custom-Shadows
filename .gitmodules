@@ -1,0 +1,6 @@
+[submodule "Assets/Plugins/Moonlit.Core"]
+	path = Assets/Plugins/Moonlit.Core
+	url = git@git.moonlit.games:internal/core.git
+[submodule "Assets/Plugins/Moonlit.Messages"]
+	path = Assets/Plugins/Moonlit.Messages
+	url = git@git.moonlit.games:internal/messages_plugin.git
