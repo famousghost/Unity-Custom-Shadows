@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44773316, g: 0.4977092, b: 0.5754046, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -531,13 +531,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalRotation: {x: 0.89018667, y: 0.09736481, z: -0.22607853, w: 0.38337502}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 133.4, y: 28.5, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -616,7 +616,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: -44.2, y: 1, z: -94.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -636,6 +636,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _CreateLightCamera: {fileID: 2067093689}
   _LightShaftsRaymarchingMaterial: {fileID: 2100000, guid: 5a9493950bc6f7e4883dbc311dacc06c, type: 2}
+  _NumOfSamples: 64
 --- !u!1 &1166311852
 GameObject:
   m_ObjectHideFlags: 0
@@ -802,8 +803,8 @@ MonoBehaviour:
   _DirectionalLight: {fileID: 705507994}
   _ShadowMaterial: {fileID: 2100000, guid: eb11222a9c65e7344a0fd9fc54555bbe, type: 2}
   _DepthMaterial: {fileID: 2100000, guid: f335076697b295b4a83847802ef1aa28, type: 2}
-  _FarPlane: 250
-  _Size: 150
+  _FarPlane: 400
+  _Size: 500
   _LightShaftsShader: {fileID: 4800000, guid: 3b56623b7ce456a40a2bc8fe1663adf2, type: 3}
   _Resolution: 2048
 --- !u!4 &2067093690

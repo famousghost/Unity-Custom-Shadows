@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
 Shader "Unlit/Shadows"
 {
     Properties
@@ -8,7 +10,7 @@ Shader "Unlit/Shadows"
     {
         Tags { "RenderType" = "Opaque"}
         LOD 100
-
+            Cull Back
         Pass
         {
             CGPROGRAM
@@ -20,6 +22,7 @@ Shader "Unlit/Shadows"
             struct appdata
             {
                 float4 vertex : POSITION;
+                float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
             };
 
@@ -27,6 +30,7 @@ Shader "Unlit/Shadows"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float3 normal : NORMAL;
                 float4 screenPos : TEXCOORD1;
             };
 
@@ -42,6 +46,7 @@ Shader "Unlit/Shadows"
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.screenPos = mul(_LightProjectionMatrix, mul(_LightViewMatrix, mul(unity_ObjectToWorld, v.vertex)));
+                o.normal = normalize(mul(unity_ObjectToWorld, v.normal));
                 return o;
             }
 
@@ -54,15 +59,20 @@ Shader "Unlit/Shadows"
             {
                 float2 screenUv = i.screenPos.xy / i.screenPos.w * 0.5f + 0.5f;
                 float shadow = 0.0f;
-                float bias = 0.0005f;
-                float currentDepth = i.screenPos.z;
+
+                float currentDepth = i.screenPos.z / i.screenPos.w;
+
+                float cosTheta = clamp(dot(normalize(_WorldSpaceLightPos0.xyz), i.normal), 0.0f, 1.0f);
+
+                float bias = 0.0005f * tan(acos(cosTheta));
+                bias = clamp(bias, 0.0f, 0.01f);
 
                 for (int x = -1; x <= 1; ++x)
                 {
                     for (int y = -1; y <= 1; ++y)
                     {
-                        float closestDepth = tex2D(_NewShadowMapTexture, screenUv + float2(x, y) * 1.0f / _ShadowMapSize);
-                        shadow += currentDepth - bias > closestDepth ? 1.0f : 0.2f;
+                        float closestDepth = tex2D(_NewShadowMapTexture, screenUv + float2(x, y) * 1.0f / _ShadowMapSize).r;
+                        shadow += (currentDepth - bias) > closestDepth ? 1.0f : 0.2f;
                     }
                 }
 

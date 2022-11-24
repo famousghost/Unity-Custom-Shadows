@@ -53,10 +53,9 @@ namespace MC.Godrays
 
         private void Update()
         {
-            _LightShaftsCamera.transform.position = _DirectionalLight.transform.position;
-            _LightShaftsCamera.transform.rotation = _DirectionalLight.transform.rotation;
-
-            _LightShaftsCamera.transform.position -= _LightShaftsCamera.transform.forward * 0.5f * _FarPlane;
+            _LightShaftsCamera.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
+            _LightShaftsCamera.transform.forward = _DirectionalLight.transform.forward;
+            _LightShaftsCamera.transform.position -= _DirectionalLight.transform.forward * 0.5f * _FarPlane;
             _DepthBufferForLightCamera.Clear();
 
             _DepthBufferForLightCamera.SetRenderTarget(_LightShaftsTexture);
@@ -73,7 +72,7 @@ namespace MC.Godrays
 
             _ShadowMaterial.SetTexture(_ShadowMapTextureId, _LightShaftsTexture);
             _ShadowMaterial.SetMatrix(_LightViewMatrixId, _LightShaftsCamera.worldToCameraMatrix);
-            _ShadowMaterial.SetMatrix(_lightProjectionMatrixId, GL.GetGPUProjectionMatrix(_LightShaftsCamera.projectionMatrix, false));
+            _ShadowMaterial.SetMatrix(_lightProjectionMatrixId, _LightShaftsCamera.projectionMatrix);
             _ShadowMaterial.SetFloat(_ShadowMapSizeId, _Resolution);
         }
 

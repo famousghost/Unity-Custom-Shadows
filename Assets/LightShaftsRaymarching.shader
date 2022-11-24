@@ -20,11 +20,6 @@ Shader "Unlit/LightShaftsRayMarching"
             #include "UnityLightingCommon.cginc"
 
             #define NUM_SAMPLES 128
-            #define NUM_SAMPLES_RCP 0.0078125
-            #define TAU 0.0001
-            #define PHI 10000000.0
-
-            #define PI_RCP 0.318309886183
 
             struct appdata
             {
@@ -38,6 +33,8 @@ Shader "Unlit/LightShaftsRayMarching"
                 float4 vertex : SV_POSITION;
                 float4 screenPos : TEXCOORD1;
                 float4 wPos : TEXCOORD2;
+                float4 vert : TEXCOORD3;
+                float3 viewVector : TEXCOORD4;
             };
 
             sampler2D _MainTex;
@@ -46,9 +43,13 @@ Shader "Unlit/LightShaftsRayMarching"
             sampler2D _NewShadowMapTexture;
             float4 _NewShadowMapTexture_ST;
 
+            sampler2D _CameraDepthTexture;
+
             float4x4 _LightViewMatrix;
             float4x4 _LightProjectionMatrix;
             float3 _CameraForward;
+
+            float _StepSize;
 
             v2f vert(appdata v)
             {
@@ -57,60 +58,47 @@ Shader "Unlit/LightShaftsRayMarching"
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.screenPos = ComputeScreenPos(o.vertex);
                 o.wPos = mul(unity_ObjectToWorld, v.vertex);
+                o.vert = v.vertex;
+                float3 viewVector = mul(unity_CameraInvProjection, float4(v.uv * 2 - 1, 0, -1));
+                o.viewVector = mul(unity_CameraToWorld, float4(viewVector, 0));
                 return o;
             }
 
-            float4 executeRaymarching(float3 VLI, float3 rayPositionLVS, float3 invViewDirLVS, float stepSize, float l, float2 screenUv)
-            {
-                float3 newRayPositionLVS = rayPositionLVS + stepSize * invViewDirLVS;
-
-                float phi = 90.0f;
-
-                float4 rayPosClipSpace = mul(UNITY_MATRIX_P, float4(rayPositionLVS, 1.0f));
-
-                float2 rayPosUv = rayPosClipSpace.xy / rayPosClipSpace.w * 0.5f + 0.5f;
-
-                float shadowTerm = rayPosClipSpace.z < tex2D(_NewShadowMapTexture, rayPosUv).r;
-
-                float d = length(rayPositionLVS);
-                float dRcp = rcp(d);
-
-                float intens = TAU * (shadowTerm * (PHI * 0.25 * PI_RCP) * dRcp * dRcp) * exp(-d * TAU) * exp(-l * TAU) * stepSize;
-
-                return float4(intens, newRayPositionLVS.xyz);
-            }
+            int _NumOfSamples;
 
             float4 frag(v2f i) : SV_Target
             {
-                float raymarchDistanceLimit = 999999.0f;
+                float2 screenUv = i.screenPos.xy / i.screenPos.w;
 
-            /*[...]*/
+                float3 rayOrigin = _WorldSpaceCameraPos.xyz;
+                float3 rayDirection = normalize(i.viewVector);
+                float cameraDepth = LinearEyeDepth(tex2D(_CameraDepthTexture, screenUv).r) * length(i.viewVector);
 
-            float4 posLVS = mul(_LightProjectionMatrix, mul(_LightViewMatrix, i.wPos));
-            float4 cameraPosLVS = mul(_LightProjectionMatrix, mul(_LightViewMatrix, float4(_WorldSpaceCameraPos.xyz, 1.0f)));
-            float raymarchDistance = trunc(clamp(length(cameraPosLVS.xyz - posLVS.xyz), 0.0f, raymarchDistanceLimit));
+                float stepSize = cameraDepth / _NumOfSamples;
 
-            float stepSize = raymarchDistance * NUM_SAMPLES_RCP;
+                float percentage = 0.0f;
+                float depth = 0.0f;
+                for (int j = 0; j < _NumOfSamples; ++j)
+                {
+                    float3 p = rayOrigin + rayDirection * depth;
+                    float4 viewPos = mul(_LightViewMatrix, float4(p, 1.0f));
+                    float4 posLVS = mul(_LightProjectionMatrix, viewPos);
 
-            float3 rayPositionLVS = posLVS;
+                    float2 lightScreenPos = posLVS.xy / posLVS.w * 0.5f + 0.5f;
+                    float shadowMapDepth = tex2D(_NewShadowMapTexture, lightScreenPos).r;
+                    float currentDepth = posLVS.z / posLVS.w;
+                    if (currentDepth < shadowMapDepth)
+                    {
+                        percentage += 1.0f;
+                    }
+                    depth += stepSize;
+                }
 
-            float3 VLI = 0.0f;
+                percentage /= NUM_SAMPLES;
 
-            float3 invViewDir = -_CameraForward;
-            float p = raymarchDistance;
-            float2 screenUv = i.screenPos.xy / i.screenPos.w * 0.5f + 0.5f;
-            int k = 0;
-            for (int j = 0; j < NUM_SAMPLES; ++j)
-            {
-                float4 result = executeRaymarching(VLI, rayPositionLVS, invViewDir, stepSize, p, screenUv);
-                p -= stepSize;
-                VLI += float3(result.x, result.x, result.x);
-                rayPositionLVS += result.yzw;
+                float3 col = lerp(tex2D(_MainTex, i.uv).rgb, 0.0f, pow(percentage, 0.2f));
+                return float4(col, 1.0f);
             }
-
-            float3 col = tex2D(_MainTex, i.uv).rgb * _LightColor0.rgb * VLI;
-            return float4(col, 1.0f);
-        }
     ENDCG
 }
     }
