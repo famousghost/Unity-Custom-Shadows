@@ -8,6 +8,7 @@ namespace MC.Godrays
         [SerializeField] private CreateLightCamera _CreateLightCamera;
         [SerializeField] private Material _LightShaftsRaymarchingMaterial;
         [SerializeField] private int _NumOfSamples;
+        [Range(1.0f, 5.0f)]
         [SerializeField] private float _LightShaftsStrength;
 
         #endregion Inspector Variables
@@ -28,7 +29,7 @@ namespace MC.Godrays
             _LightShaftsRaymarchingMaterial.SetInt(_NumOfSamplesId, _NumOfSamples);
             _LightShaftsRaymarchingMaterial.SetFloat(_FarPlaneId, cam.farClipPlane);
             _LightShaftsRaymarchingMaterial.SetInt(_FrameNumberId, Time.frameCount);
-            _LightShaftsRaymarchingMaterial.SetFloat(_LightShaftsStrengthId, _LightShaftsStrength);
+            _LightShaftsRaymarchingMaterial.SetFloat(_LightShaftsStrengthId, 1.0f / _LightShaftsStrength);
             
         }
 

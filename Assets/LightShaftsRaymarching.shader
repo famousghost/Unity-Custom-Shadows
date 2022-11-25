@@ -108,7 +108,7 @@ Shader "Unlit/LightShaftsRayMarching"
                     float2 lightScreenPos = posLVS.xy / posLVS.w * 0.5f + 0.5f;
                     float2 shadowMapDepth = tex2D(_NewShadowMapTexture, lightScreenPos).rg;
                     float currentDepth = posLVS.z / posLVS.w;
-                    if (currentDepth + (0.005f * randomOffset) < shadowMapDepth.r && shadowMapDepth.g > _FarPlane)
+                    if (currentDepth < shadowMapDepth.r && shadowMapDepth.g > _FarPlane)
                     {
                         percentage += 1.0f;
                     }
