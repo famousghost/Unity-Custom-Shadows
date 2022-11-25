@@ -27,7 +27,6 @@ namespace MC.Godrays
             _LightShaftsRaymarchingMaterial.SetMatrix(_lightProjectionMatrixId, GL.GetGPUProjectionMatrix(cam.projectionMatrix, false));
             _LightShaftsRaymarchingMaterial.SetVector(_CameraForwardId, _CreateLightCamera.transform.forward);
             _LightShaftsRaymarchingMaterial.SetInt(_NumOfSamplesId, _NumOfSamples);
-            _LightShaftsRaymarchingMaterial.SetFloat(_FarPlaneId, cam.farClipPlane);
             _LightShaftsRaymarchingMaterial.SetInt(_FrameNumberId, Time.frameCount);
             _LightShaftsRaymarchingMaterial.SetFloat(_LightShaftsStrengthId, 1.0f / _LightShaftsStrength);
             

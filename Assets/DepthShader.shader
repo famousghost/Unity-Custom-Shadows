@@ -11,7 +11,7 @@ Shader "Unlit/DepthShader"
 
         Pass
         {
-            Cull Front
+            Cull Back
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag

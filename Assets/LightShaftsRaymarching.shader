@@ -48,7 +48,6 @@ Shader "Unlit/LightShaftsRayMarching"
             float4x4 _LightViewMatrix;
             float4x4 _LightProjectionMatrix;
             float3 _CameraForward;
-            float _FarPlane;
 
             float _StepSize;
 
@@ -68,13 +67,6 @@ Shader "Unlit/LightShaftsRayMarching"
             int _NumOfSamples;
             int _FrameNumber;
             float _LightShaftsStrength;
-
-            float hash13(float3 p3)
-            {
-                p3 = frac(p3 * .1031);
-                p3 += dot(p3, p3.yzx + 33.33);
-                return frac((p3.x + p3.y) * p3.z);
-            }
 
             float InterleavedGradientNoise(float2 pixel, int frame)
             {
@@ -108,7 +100,7 @@ Shader "Unlit/LightShaftsRayMarching"
                     float2 lightScreenPos = posLVS.xy / posLVS.w * 0.5f + 0.5f;
                     float2 shadowMapDepth = tex2D(_NewShadowMapTexture, lightScreenPos).rg;
                     float currentDepth = posLVS.z / posLVS.w;
-                    if (currentDepth < shadowMapDepth.r && shadowMapDepth.g > _FarPlane)
+                    if (currentDepth < shadowMapDepth.r && shadowMapDepth.g > 0.0f)
                     {
                         percentage += 1.0f;
                     }

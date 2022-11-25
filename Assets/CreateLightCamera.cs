@@ -51,7 +51,7 @@ namespace MC.Godrays
             _LightShaftsCamera.AddCommandBuffer(CameraEvent.AfterForwardOpaque, _DepthBufferForLightCamera);
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
             _LightShaftsCamera.transform.position = new Vector3(_MainCamera.transform.position.x, 0.0f, _MainCamera.transform.position.z);
 
