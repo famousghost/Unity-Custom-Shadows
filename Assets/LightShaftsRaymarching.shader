@@ -19,7 +19,7 @@ Shader "Unlit/LightShaftsRayMarching"
             #include "UnityCG.cginc"
             #include "UnityLightingCommon.cginc"
 
-            #define NUM_SAMPLES 128
+            #define GOLDENT_RATIO 0.61803398875
 
             struct appdata
             {
@@ -48,6 +48,7 @@ Shader "Unlit/LightShaftsRayMarching"
             float4x4 _LightViewMatrix;
             float4x4 _LightProjectionMatrix;
             float3 _CameraForward;
+            float _FarPlane;
 
             float _StepSize;
 
@@ -59,18 +60,34 @@ Shader "Unlit/LightShaftsRayMarching"
                 o.screenPos = ComputeScreenPos(o.vertex);
                 o.wPos = mul(unity_ObjectToWorld, v.vertex);
                 o.vert = v.vertex;
-                float3 viewVector = mul(unity_CameraInvProjection, float4(v.uv * 2 - 1, 0, -1));
-                o.viewVector = mul(unity_CameraToWorld, float4(viewVector, 0));
+                float3 viewVector = mul(unity_CameraInvProjection, float4(v.uv * 2.0f - 1.0f, 0.0f, -1.0f));
+                o.viewVector = mul(unity_CameraToWorld, float4(viewVector, 0.0f));
                 return o;
             }
 
             int _NumOfSamples;
+            int _FrameNumber;
+            float _LightShaftsStrength;
+
+            float hash13(float3 p3)
+            {
+                p3 = frac(p3 * .1031);
+                p3 += dot(p3, p3.yzx + 33.33);
+                return frac((p3.x + p3.y) * p3.z);
+            }
+
+            float InterleavedGradientNoise(float2 pixel, int frame)
+            {
+                pixel += (float(frame) * 5.588238f);
+                return frac(52.9829189f * frac(0.06711056f * float(pixel.x) + 0.00583715f * float(pixel.y)));
+            }
 
             float4 frag(v2f i) : SV_Target
             {
                 float2 screenUv = i.screenPos.xy / i.screenPos.w;
 
                 float3 rayOrigin = _WorldSpaceCameraPos.xyz;
+      
                 float3 rayDirection = normalize(i.viewVector);
                 float cameraDepth = LinearEyeDepth(tex2D(_CameraDepthTexture, screenUv).r) * length(i.viewVector);
 
@@ -78,25 +95,28 @@ Shader "Unlit/LightShaftsRayMarching"
 
                 float percentage = 0.0f;
                 float depth = 0.0f;
+
+                float randomOffset = InterleavedGradientNoise(screenUv * _ScreenParams.xy, _FrameNumber);
+
                 for (int j = 0; j < _NumOfSamples; ++j)
                 {
-                    float3 p = rayOrigin + rayDirection * depth;
+                    float3 p = rayOrigin + rayDirection * cameraDepth * ((float(j) + randomOffset) / _NumOfSamples);
+
                     float4 viewPos = mul(_LightViewMatrix, float4(p, 1.0f));
                     float4 posLVS = mul(_LightProjectionMatrix, viewPos);
 
                     float2 lightScreenPos = posLVS.xy / posLVS.w * 0.5f + 0.5f;
-                    float shadowMapDepth = tex2D(_NewShadowMapTexture, lightScreenPos).r;
+                    float2 shadowMapDepth = tex2D(_NewShadowMapTexture, lightScreenPos).rg;
                     float currentDepth = posLVS.z / posLVS.w;
-                    if (currentDepth < shadowMapDepth)
+                    if (currentDepth + (0.005f * randomOffset) < shadowMapDepth.r && shadowMapDepth.g > _FarPlane)
                     {
                         percentage += 1.0f;
                     }
-                    depth += stepSize;
                 }
 
-                percentage /= NUM_SAMPLES;
+                percentage /= _NumOfSamples;
 
-                float3 col = lerp(tex2D(_MainTex, i.uv).rgb, 0.0f, pow(percentage, 0.2f));
+                float3 col = lerp(tex2D(_MainTex, i.uv).rgb, 0.0f, pow(percentage, _LightShaftsStrength));
                 return float4(col, 1.0f);
             }
     ENDCG

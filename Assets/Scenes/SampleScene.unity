@@ -637,6 +637,7 @@ MonoBehaviour:
   _CreateLightCamera: {fileID: 2067093689}
   _LightShaftsRaymarchingMaterial: {fileID: 2100000, guid: 5a9493950bc6f7e4883dbc311dacc06c, type: 2}
   _NumOfSamples: 64
+  _LightShaftsStrength: 1
 --- !u!1 &1166311852
 GameObject:
   m_ObjectHideFlags: 0

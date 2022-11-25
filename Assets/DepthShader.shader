@@ -11,7 +11,7 @@ Shader "Unlit/DepthShader"
 
         Pass
         {
-            Cull Front
+            Cull Back
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -30,6 +30,7 @@ Shader "Unlit/DepthShader"
                 float4 vertex : SV_POSITION;
                 float4 screenPos : TEXCOORD1;
                 float depth : TEXCOORD2;
+                float3 viewVector : TEXCOORD3;
             };
 
             sampler2D _MainTex;
@@ -42,6 +43,8 @@ Shader "Unlit/DepthShader"
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.depth = -mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, v.vertex)).z;
                 o.screenPos = ComputeScreenPos(o.vertex);
+                float3 viewVector = mul(unity_CameraInvProjection, float4(v.uv * 2.0f - 1.0f, 0.0f, -1.0f));
+                o.viewVector = mul(unity_CameraToWorld, float4(viewVector, 0.0f));
                 return o;
             }
 
@@ -49,8 +52,10 @@ Shader "Unlit/DepthShader"
 
             float4 frag(v2f i) : SV_Target
             {
+                float2 screenUv = i.screenPos.xy / i.screenPos.w * 0.5f + 0.5f;
+                float cameraDepth = LinearEyeDepth(tex2D(_CameraDepthTexture, screenUv).r) * length(i.viewVector);
                 float depth = i.screenPos.z / i.screenPos.w;
-                 return float4(depth, depth, depth, 1.0f);
+                return float4(depth, cameraDepth, depth, 1.0f);
             }
             ENDCG
         }

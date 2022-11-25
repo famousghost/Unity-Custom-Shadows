@@ -1,7 +1,5 @@
 namespace MC.Godrays
 {
-    using JetBrains.Annotations;
-    using UnityEditor.SearchService;
     using UnityEngine;
 
     public class LightShaftsAlgorithm : MonoBehaviour
@@ -10,6 +8,7 @@ namespace MC.Godrays
         [SerializeField] private CreateLightCamera _CreateLightCamera;
         [SerializeField] private Material _LightShaftsRaymarchingMaterial;
         [SerializeField] private int _NumOfSamples;
+        [SerializeField] private float _LightShaftsStrength;
 
         #endregion Inspector Variables
 
@@ -19,7 +18,7 @@ namespace MC.Godrays
             Camera.main.depthTextureMode = DepthTextureMode.Depth;
         }
 
-        private void OnRenderImage(RenderTexture source, RenderTexture destination)
+        private void Update()
         {
             _LightShaftsRaymarchingMaterial.SetTexture(_ShadowMapTextureId, _CreateLightCamera._LightShaftsTexture);
             var cam = _CreateLightCamera._LightShaftsCamera;
@@ -27,6 +26,15 @@ namespace MC.Godrays
             _LightShaftsRaymarchingMaterial.SetMatrix(_lightProjectionMatrixId, GL.GetGPUProjectionMatrix(cam.projectionMatrix, false));
             _LightShaftsRaymarchingMaterial.SetVector(_CameraForwardId, _CreateLightCamera.transform.forward);
             _LightShaftsRaymarchingMaterial.SetInt(_NumOfSamplesId, _NumOfSamples);
+            _LightShaftsRaymarchingMaterial.SetFloat(_FarPlaneId, cam.farClipPlane);
+            _LightShaftsRaymarchingMaterial.SetInt(_FrameNumberId, Time.frameCount);
+            _LightShaftsRaymarchingMaterial.SetFloat(_LightShaftsStrengthId, _LightShaftsStrength);
+            
+        }
+
+        private void OnRenderImage(RenderTexture source, RenderTexture destination)
+        {
+
             Graphics.Blit(source, destination, _LightShaftsRaymarchingMaterial);
         }
 
@@ -38,6 +46,9 @@ namespace MC.Godrays
         private static readonly int _lightProjectionMatrixId = Shader.PropertyToID("_LightProjectionMatrix");
         private static readonly int _CameraForwardId = Shader.PropertyToID("_CameraForward");
         private static readonly int _NumOfSamplesId = Shader.PropertyToID("_NumOfSamples");
+        private static readonly int _FarPlaneId = Shader.PropertyToID("_FarPlane");
+        private static readonly int _FrameNumberId = Shader.PropertyToID("_FrameNumber");
+        private static readonly int _LightShaftsStrengthId = Shader.PropertyToID("_LightShaftsStrength");
 
         #endregion Private Variables
     }
