@@ -19,8 +19,6 @@ Shader "Unlit/LightShaftsRayMarching"
             #include "UnityCG.cginc"
             #include "UnityLightingCommon.cginc"
 
-            #define GOLDENT_RATIO 0.61803398875
-
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -62,8 +60,6 @@ Shader "Unlit/LightShaftsRayMarching"
 
                 float2 uv = o.screenPos.xy / o.screenPos.w;
 
-                float3 viewVector = mul(unity_CameraInvProjection, float4(uv * 2.0f - 1.0f, 0.0f, -1.0f));
-                o.viewVector = mul(unity_CameraToWorld, float4(viewVector, 0.0f));
                 return o;
             }
 
@@ -91,8 +87,11 @@ Shader "Unlit/LightShaftsRayMarching"
 
                 float3 rayOrigin = _WorldSpaceCameraPos.xyz;
 
-                float3 rayDirection = normalize(i.viewVector);
-                float cameraDepth = LinearEyeDepth(tex2D(_CameraDepthTexture, screenUv).r) * length(i.viewVector);
+                float3 viewVector = mul(unity_CameraInvProjection, float4(i.uv * 2.0f - 1.0f, 0.0f, -1.0f));
+                viewVector = mul(unity_CameraToWorld, float4(viewVector, 0.0f));
+
+                float3 rayDirection = normalize(viewVector);
+                float cameraDepth = LinearEyeDepth(tex2D(_CameraDepthTexture, screenUv).r) * length(viewVector);
 
                 float percentage = 0.0f;
                 float depth = 0.0f;

@@ -43,7 +43,6 @@ namespace MC.Godrays
             };
             _LightShaftsTexture.Create();
             CreateCameraInLightSpace();
-            _LightShaftsCamera.depthTextureMode = DepthTextureMode.Depth;
 
             _DepthBufferForLightCamera = new CommandBuffer
             {
@@ -75,16 +74,29 @@ namespace MC.Godrays
 
             _ShadowMaterial.SetTexture(_ShadowMapTextureId, _LightShaftsTexture);
             _ShadowMaterial.SetMatrix(_LightViewMatrixId, _LightShaftsCamera.worldToCameraMatrix);
-            _ShadowMaterial.SetMatrix(_lightProjectionMatrixId, _LightShaftsCamera.projectionMatrix);
+            _ShadowMaterial.SetMatrix(_lightProjectionMatrixId, GL.GetGPUProjectionMatrix(_LightShaftsCamera.projectionMatrix, false));
             _ShadowMaterial.SetFloat(_ShadowMapSizeId, _Resolution);
 
             var objPos = _ObjectTest.position;
-            Vector4 newPos = GL.GetGPUProjectionMatrix(_LightShaftsCamera.projectionMatrix, false) * _LightShaftsCamera.worldToCameraMatrix * new Vector4(objPos.x, objPos.y, objPos.z, 1.0f);
+
+            var cam = _MainCamera;
+
+            Debug.Log($"objPos.len = {(objPos - _MainCamera.transform.position).magnitude}");
+            Vector4 newPos = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix * new Vector4(objPos.x, objPos.y, objPos.z, 1.0f);
 
             newPos.x /= newPos.w;
             newPos.y /= newPos.w;
+            newPos.z /= newPos.w;
+            newPos.w /= newPos.w;
 
             //Debug.Log($"x: {newPos.x}, y: {newPos.y}");
+
+            Vector4 viewNewPos = GL.GetGPUProjectionMatrix(cam.projectionMatrix.inverse, false) * new Vector4(newPos.x, newPos.y, 0.0f, -1.0f);
+            viewNewPos = cam.worldToCameraMatrix.inverse * new Vector4(viewNewPos.x, viewNewPos.y, viewNewPos.z, 0.0f);
+
+            //Debug.Log($"world x: {viewNewPos.x}, world y: {viewNewPos.y}, length = {viewNewPos.magnitude}");
+
+            //Debug.DrawLine(_MainCamera.transform.position, _MainCamera.transform.position + new Vector3(viewNewPos.x, viewNewPos.y, viewNewPos.z), Color.red);
         }
 
         #endregion Unity Methods
@@ -106,9 +118,6 @@ namespace MC.Godrays
             _LightCamera = new GameObject("LightShaftsCamera");
 
             var cam = _LightCamera.AddComponent<Camera>();
-            var renderLightShafts = _LightCamera.AddComponent<RenderLightShafts>();
-
-            renderLightShafts.LightShaftsMaterial = new Material(_LightShaftsShader);
 
             cam.CopyFrom(_MainCamera);
 

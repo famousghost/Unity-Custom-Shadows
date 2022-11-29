@@ -41,13 +41,7 @@ Shader "Unlit/DepthShader"
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                o.depth = -mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, v.vertex)).z;
-                // We want [0,1] linear depth, so that 0.5 is half way between near and far.
-                COMPUTE_EYEDEPTH(o.depth);
-                o.depth = (o.depth - _ProjectionParams.y) / (_ProjectionParams.z - _ProjectionParams.y);
                 o.screenPos = ComputeScreenPos(o.vertex);
-                float3 viewVector = mul(unity_CameraInvProjection, float4(v.uv * 2.0f - 1.0f, 0.0f, -1.0f));
-                o.viewVector = mul(unity_CameraToWorld, float4(viewVector, 0.0f));
                 return o;
             }
 
@@ -55,8 +49,6 @@ Shader "Unlit/DepthShader"
 
             float4 frag(v2f i) : SV_Target
             {
-                float2 screenUv = i.screenPos.xy / i.screenPos.w * 0.5f + 0.5f;
-                float cameraDepth = LinearEyeDepth(tex2D(_CameraDepthTexture, screenUv).r) * length(i.viewVector);
                 float depth = i.screenPos.z / i.screenPos.w;
                 return float4(depth, depth, depth, 1.0f);
             }

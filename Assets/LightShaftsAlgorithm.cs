@@ -16,7 +16,6 @@ namespace MC.Godrays
         #region Unity Methods
         private void Start()
         {
-            Camera.main.depthTextureMode = DepthTextureMode.Depth;
         }
 
         private void Update()
