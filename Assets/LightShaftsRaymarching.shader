@@ -59,7 +59,10 @@ Shader "Unlit/LightShaftsRayMarching"
                 o.screenPos = ComputeScreenPos(o.vertex);
                 o.wPos = mul(unity_ObjectToWorld, v.vertex);
                 o.vert = v.vertex;
-                float3 viewVector = mul(unity_CameraInvProjection, float4(v.uv * 2.0f - 1.0f, 0.0f, -1.0f));
+
+                float2 uv = o.screenPos.xy / o.screenPos.w;
+
+                float3 viewVector = mul(unity_CameraInvProjection, float4(uv * 2.0f - 1.0f, 0.0f, -1.0f));
                 o.viewVector = mul(unity_CameraToWorld, float4(viewVector, 0.0f));
                 return o;
             }
@@ -74,16 +77,22 @@ Shader "Unlit/LightShaftsRayMarching"
                 return frac(52.9829189f * frac(0.06711056f * float(pixel.x) + 0.00583715f * float(pixel.y)));
             }
 
+            float screenClampToBorder(in float2 screenUv)
+            {
+                const float x = step(0.01f, screenUv.x) * (1.0f - step(0.999f, screenUv.x));
+                const float y = step(0.01f, screenUv.y) * (1.0f - step(0.999f, screenUv.y));
+
+                return saturate(x * y);
+            }
+
             float4 frag(v2f i) : SV_Target
             {
                 float2 screenUv = i.screenPos.xy / i.screenPos.w;
 
                 float3 rayOrigin = _WorldSpaceCameraPos.xyz;
-      
+
                 float3 rayDirection = normalize(i.viewVector);
                 float cameraDepth = LinearEyeDepth(tex2D(_CameraDepthTexture, screenUv).r) * length(i.viewVector);
-
-                float stepSize = cameraDepth / _NumOfSamples;
 
                 float percentage = 0.0f;
                 float depth = 0.0f;
@@ -94,13 +103,12 @@ Shader "Unlit/LightShaftsRayMarching"
                 {
                     float3 p = rayOrigin + rayDirection * cameraDepth * ((float(j) + randomOffset) / _NumOfSamples);
 
-                    float4 viewPos = mul(_LightViewMatrix, float4(p, 1.0f));
-                    float4 posLVS = mul(_LightProjectionMatrix, viewPos);
+                    float4 posLVS = mul(_LightProjectionMatrix, mul(_LightViewMatrix, float4(p, 1.0f)));
 
                     float2 lightScreenPos = posLVS.xy / posLVS.w * 0.5f + 0.5f;
-                    float2 shadowMapDepth = tex2D(_NewShadowMapTexture, lightScreenPos).rg;
+                    float shadowMapDepth = tex2D(_NewShadowMapTexture, lightScreenPos).r * screenClampToBorder(lightScreenPos);
                     float currentDepth = posLVS.z / posLVS.w;
-                    if (currentDepth < shadowMapDepth.r && shadowMapDepth.g > 0.0f)
+                    if (currentDepth < shadowMapDepth && shadowMapDepth > 0.0f)
                     {
                         percentage += 1.0f;
                     }

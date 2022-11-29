@@ -21,6 +21,10 @@ namespace MC.Godrays
 
         private void Update()
         {
+        }
+
+        private void OnRenderImage(RenderTexture source, RenderTexture destination)
+        {
             _LightShaftsRaymarchingMaterial.SetTexture(_ShadowMapTextureId, _CreateLightCamera._LightShaftsTexture);
             var cam = _CreateLightCamera._LightShaftsCamera;
             _LightShaftsRaymarchingMaterial.SetMatrix(_LightViewMatrixId, cam.worldToCameraMatrix);
@@ -29,12 +33,6 @@ namespace MC.Godrays
             _LightShaftsRaymarchingMaterial.SetInt(_NumOfSamplesId, _NumOfSamples);
             _LightShaftsRaymarchingMaterial.SetInt(_FrameNumberId, Time.frameCount);
             _LightShaftsRaymarchingMaterial.SetFloat(_LightShaftsStrengthId, 1.0f / _LightShaftsStrength);
-            
-        }
-
-        private void OnRenderImage(RenderTexture source, RenderTexture destination)
-        {
-
             Graphics.Blit(source, destination, _LightShaftsRaymarchingMaterial);
         }
 

@@ -27,6 +27,8 @@ namespace MC.Godrays
 
         [SerializeField] private int _Resolution = 512;
 
+        [SerializeField] private Transform _ObjectTest;
+
         #endregion Inspector Variables
 
         #region Unity Methods
@@ -75,6 +77,14 @@ namespace MC.Godrays
             _ShadowMaterial.SetMatrix(_LightViewMatrixId, _LightShaftsCamera.worldToCameraMatrix);
             _ShadowMaterial.SetMatrix(_lightProjectionMatrixId, _LightShaftsCamera.projectionMatrix);
             _ShadowMaterial.SetFloat(_ShadowMapSizeId, _Resolution);
+
+            var objPos = _ObjectTest.position;
+            Vector4 newPos = GL.GetGPUProjectionMatrix(_LightShaftsCamera.projectionMatrix, false) * _LightShaftsCamera.worldToCameraMatrix * new Vector4(objPos.x, objPos.y, objPos.z, 1.0f);
+
+            newPos.x /= newPos.w;
+            newPos.y /= newPos.w;
+
+            //Debug.Log($"x: {newPos.x}, y: {newPos.y}");
         }
 
         #endregion Unity Methods
@@ -103,9 +113,6 @@ namespace MC.Godrays
             cam.CopyFrom(_MainCamera);
 
             cam.orthographic = true;
-
-            cam.transform.position = _DirectionalLight.transform.position;
-            cam.transform.rotation = _DirectionalLight.transform.rotation;
 
             cam.farClipPlane = _FarPlane;
             cam.nearClipPlane = 0.01f;
