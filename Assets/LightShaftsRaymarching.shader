@@ -33,6 +33,7 @@ Shader "Unlit/LightShaftsRayMarching"
                 float4 wPos : TEXCOORD2;
                 float4 vert : TEXCOORD3;
                 float3 viewVector : TEXCOORD4;
+                float3 viewPos : TEXCOORD5;
             };
 
             sampler2D _MainTex;
@@ -46,8 +47,19 @@ Shader "Unlit/LightShaftsRayMarching"
             float4x4 _LightViewMatrix;
             float4x4 _LightProjectionMatrix;
             float3 _CameraForward;
+            float3 _FogColor;
+            float3 _SunColor;
 
             float _StepSize;
+
+            int _NumOfSamples;
+            int _FrameNumber;
+            float _LightShaftsStrength;
+            float _FogStrength;
+            float _FogDistortionDensity;
+            float _FogDensityStrength;
+
+
 
             v2f vert(appdata v)
             {
@@ -56,6 +68,7 @@ Shader "Unlit/LightShaftsRayMarching"
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.screenPos = ComputeScreenPos(o.vertex);
                 o.wPos = mul(unity_ObjectToWorld, v.vertex);
+                o.viewPos = mul(UNITY_MATRIX_V, o.wPos).xyz;
                 o.vert = v.vertex;
 
                 float2 uv = o.screenPos.xy / o.screenPos.w;
@@ -63,9 +76,7 @@ Shader "Unlit/LightShaftsRayMarching"
                 return o;
             }
 
-            int _NumOfSamples;
-            int _FrameNumber;
-            float _LightShaftsStrength;
+
 
             float InterleavedGradientNoise(float2 pixel, int frame)
             {
@@ -79,6 +90,72 @@ Shader "Unlit/LightShaftsRayMarching"
                 const float y = step(0.01f, screenUv.y) * (1.0f - step(0.999f, screenUv.y));
 
                 return saturate(x * y);
+            }
+
+            float random(in float3 uv)
+            {
+                return frac(sin(dot(uv, float3(13.5345f, 33.534534f, 43.5343f))) * 4542628.545f);
+            }
+
+
+            float ssmooth(float x)
+            {
+                return x * x * (3.0f - 2.0f * x);
+            }
+
+            float3 modUv(float3 uv, in float freq)
+            {
+                return float3(uv.x % freq, uv.y % freq, uv.z % freq);
+            }
+
+            float simpleNoise(in float3 uv, in float freq)
+            {
+                float3 iuv = floor(uv * freq);
+                float3 fuv = frac(uv * freq);
+
+                float x = random(modUv(iuv + float3(0.0f, 0.0f, 0.0f), freq));
+                float x1 = random(modUv(iuv + float3(1.0f, 0.0f, 0.0f), freq));
+
+                float y = random(modUv(iuv + float3(0.0f, 1.0f, 0.0f), freq));
+                float y1 = random(modUv(iuv + float3(1.0f, 1.0f, 0.0f), freq));
+
+                float x2 = random(modUv(iuv + float3(0.0f, 0.0f, 1.0f), freq));
+                float x3 = random(modUv(iuv + float3(1.0f, 0.0f, 1.0f), freq));
+
+                float y2 = random(modUv(iuv + float3(0.0f, 1.0f, 1.0f), freq));
+                float y3 = random(modUv(iuv + float3(1.0f, 1.0f, 1.0f), freq));
+
+
+
+                float a = lerp(x, x1, ssmooth(fuv.x));
+
+                float b = lerp(y, y1, ssmooth(fuv.x));
+
+                float c = lerp(x2, x3, ssmooth(fuv.x));
+
+                float d = lerp(y2, y3, ssmooth(fuv.x));
+
+                float ab = lerp(a, b, ssmooth(fuv.y));
+
+                float cd = lerp(c, d, ssmooth(fuv.y));
+
+
+                return lerp(ab, cd, ssmooth(fuv.z));
+            }
+
+            float fbm(in float3 uv, in float density)
+            {
+                float sum = 0.00;
+                float amp = 0.7;
+
+                for (int i = 0; i < 6; ++i)
+                {
+                    sum += simpleNoise(uv, density) * amp;
+                    uv += uv * 1.2;
+                    amp *= 0.4;
+                }
+
+                return sum;
             }
 
             float4 frag(v2f i) : SV_Target
@@ -98,6 +175,7 @@ Shader "Unlit/LightShaftsRayMarching"
 
                 float randomOffset = InterleavedGradientNoise(screenUv * _ScreenParams.xy, _FrameNumber);
 
+                float fogPerlinDistortion = 0.0f;
                 for (int j = 0; j < _NumOfSamples; ++j)
                 {
                     float3 p = rayOrigin + rayDirection * cameraDepth * ((float(j) + randomOffset) / _NumOfSamples);
@@ -111,11 +189,23 @@ Shader "Unlit/LightShaftsRayMarching"
                     {
                         percentage += 1.0f;
                     }
+                    
+                    float3 pos = p * _FogDensityStrength + float3(0.0f, 0.0f, _Time.y * 0.005f);
+                    fogPerlinDistortion += exp(-fbm(pos + fbm(pos, _FogDistortionDensity), _FogDistortionDensity));
+
                 }
 
                 percentage /= _NumOfSamples;
 
-                float3 col = lerp(tex2D(_MainTex, i.uv).rgb, 0.0f, pow(percentage, _LightShaftsStrength));
+                float3 col = tex2D(_MainTex, i.uv).rgb;
+
+                float fogAmount = (1.0f - exp(-cameraDepth * _FogStrength)) ;
+                float sunAmount = max(dot(rayDirection, _WorldSpaceLightPos0.xyz), 0.0f);
+
+                float3 fogColor = lerp(_FogColor, _SunColor, pow(sunAmount, 4.0f));
+
+                col = lerp(col, fogColor, fogAmount* fogPerlinDistortion / _NumOfSamples);
+                col = lerp(col, 0.0f, pow(percentage, _LightShaftsStrength) * saturate(fogAmount) * sunAmount * smoothstep(0.0f, 0.5f, dot(_WorldSpaceLightPos0.xyz, float3(0.0f, 1.0f, 0.0f))));
                 return float4(col, 1.0f);
             }
     ENDCG

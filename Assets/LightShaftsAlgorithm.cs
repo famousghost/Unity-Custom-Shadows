@@ -11,6 +11,13 @@ namespace MC.Godrays
         [Range(1.0f, 5.0f)]
         [SerializeField] private float _LightShaftsStrength;
 
+        [SerializeField] private float _FogStrength;
+        [SerializeField] private float _FogDistortionDensity;
+        [SerializeField] private float _FogDensityStrength;
+
+
+        [SerializeField] private Color _FogColor;
+        [SerializeField] private Color _SunColor;
         #endregion Inspector Variables
 
         #region Unity Methods
@@ -31,8 +38,14 @@ namespace MC.Godrays
             _LightShaftsRaymarchingMaterial.SetVector(_CameraForwardId, _CreateLightCamera.transform.forward);
             _LightShaftsRaymarchingMaterial.SetInt(_NumOfSamplesId, _NumOfSamples);
             _LightShaftsRaymarchingMaterial.SetInt(_FrameNumberId, Time.frameCount);
+            _LightShaftsRaymarchingMaterial.SetColor(_FogColorId, _FogColor);
             _LightShaftsRaymarchingMaterial.SetFloat(_LightShaftsStrengthId, 1.0f / _LightShaftsStrength);
+            _LightShaftsRaymarchingMaterial.SetFloat(_FogStrengthId, 1.0f / _FogStrength);
+            _LightShaftsRaymarchingMaterial.SetColor(_SunColorId, _SunColor);
+            _LightShaftsRaymarchingMaterial.SetFloat(_FogDistortionDensityId, _FogDistortionDensity);
+            _LightShaftsRaymarchingMaterial.SetFloat(_FogDensityStrengthId, _FogDensityStrength);
             Graphics.Blit(source, destination, _LightShaftsRaymarchingMaterial);
+
         }
 
         #endregion Unity Methods
@@ -46,7 +59,11 @@ namespace MC.Godrays
         private static readonly int _FarPlaneId = Shader.PropertyToID("_FarPlane");
         private static readonly int _FrameNumberId = Shader.PropertyToID("_FrameNumber");
         private static readonly int _LightShaftsStrengthId = Shader.PropertyToID("_LightShaftsStrength");
-
+        private static readonly int _FogColorId = Shader.PropertyToID("_FogColor");
+        private static readonly int _FogStrengthId = Shader.PropertyToID("_FogStrength");
+        private static readonly int _SunColorId = Shader.PropertyToID("_SunColor");
+        private static readonly int _FogDistortionDensityId = Shader.PropertyToID("_FogDistortionDensity");
+        private static readonly int _FogDensityStrengthId = Shader.PropertyToID("_FogDensityStrength");
         #endregion Private Variables
     }
 }
